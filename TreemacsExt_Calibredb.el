@@ -1,9 +1,11 @@
-(require 'calibredb)
+(require 'dash)
 (require 'treemacs)
+(require 'calibredb)
 (require 'treemacs-mouse-interface)
+(require 'treemacs-treelib)
 (require 'treemacs-rendering)
 (require 'TreemacsExt)
-
+(require 'all-the-icons-dired)
 
 (defun calibredb-list-ebooks()
   (interactive)
@@ -14,54 +16,59 @@
 (treemacs-define-entry-node-type TreemacsExt_Calibredb
   :label (propertize "Ebooks" 'face 'font-lock-keyword-face)
   :key 'TreemacsExt_Calibredb
-  :open-icon (treemacs-get-icon-value 'list)
-  :closed-icon (treemacs-get-icon-value 'list)
+  :open-icon (all-the-icons-dired--icon "~/Documents")
+  :closed-icon (all-the-icons-dired--icon "~/Documents")
   :children (calibredb-list-ebooks)
   :child-type 'ebook)
 
 (treemacs-define-leaf-node-type ebook-metainfo-value
   :label item
-  :icon (treemacs-get-icon-value 'node)
+  ;; :icon (treemacs-get-icon-value 'node)
+  :icon (all-the-icons-dired--icon "catalog")
   :key item
   )
 
-(treemacs-define-entry-node-type ebook-metainfo-item
+(treemacs-define-leaf-node-type ebook-metainfo-item
   :key item
-  :open-icon (treemacs-get-icon-value 'list)
-  :closed-icon (treemacs-get-icon-value 'list)
-  :label (string-trim (symbol-name (nth 0 item)) ":")
-  ;; :children (list "1" "2")
-  :children (list (nth 1 item))
-  :child-type 'ebook-metainfo-value
+  :icon (treemacs-get-icon-value 'tag-leaf)
+  ;; :icon (all-the-icons-dired--icon "metadata.json")
+  :label (format "%s:%s"
+				 (string-trim (symbol-name (nth 0 item)) ":")
+				 (nth  1 item))
   )
 (defun treemacs-calibredb-open-book(&optional state)
-  (message "open book")
+  (message "openning book...")
   (calibredb-find-file
    (cdr (treemacs-button-get (treemacs-node-at-point) :item))
    )
-  ;; (prin1 (treemacs-button-get (treemacs-node-at-point) :item))
+  (message "book opened")
   )
 
 (treemacs-define-expandable-node-type ebook
   ;; :closed-icon (treemacs-get-icon-value 'mail-plus)
-  :closed-icon (all-the-icons-dired--icon "d:/EmacsConfig/Documents")
+  :closed-icon (all-the-icons-dired--icon "~/org-roam-files")
   ;; :closed-icon "+ "
-  :open-icon (all-the-icons-dired--icon "d:/EmacsConfig/Documents")
+  :open-icon (all-the-icons-dired--icon "README")
   :label (calibredb-getattr (cdr item) :book-title)
   :key item
-  ;; :children (nth 1 item)
   :children (--filter (not (string= "" (nth 1 it))) (nth 1 item))
   :child-type 'ebook-metainfo-item
   :ret-action #'treemacs-calibredb-open-book
-  ;; :ret-action (lambda(arg) (calibredb-find-file (cdr item) nil)) 
   )
 
-(treemacs-enable-project-extension
+;; (treemacs-enable-project-extension
+(treemacs-enable-top-level-extension
  :extension 'TreemacsExt_Calibredb
- :position 'top
+ :position 'bottom
  ;; :predicate (lambda (_)t)
  ;; :predicate (lambda (project) (eq project (car (treemacs-workspace->projects (treemacs-current-workspace)))))
- :predicate (lambda (project) (eq project treemacs--project-of-extision-info))
+ ;; :predicate (lambda (project) (eq project treemacs--project-of-extision-info))
+ :predicate (lambda(_)(string= (treemacs-workspace->name (treemacs-current-workspace)) "Disks"))
  )
 
+;; (treemacs-disable-project-extension
+;; (treemacs-disable-top-level-extension
+;;  :extension 'TreemacsExt_Calibredb
+;;  :position 'top
+;;  )
 (provide 'TreemacsExt_Calibredb)
